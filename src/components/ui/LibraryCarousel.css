@@ -1,0 +1,101 @@
+/* ═══════════════════════════════════════════════
+   LibraryCarousel.css
+═══════════════════════════════════════════════ */
+
+.lc {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #0a1240;
+  user-select: none;
+}
+
+/* Track */
+.lc__track { position: absolute; inset: 0; }
+
+.lc__slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(.4, 0, .2, 1);
+}
+
+.lc__slide--active { opacity: 1; }
+
+/* Gradient overlay */
+.lc__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10,18,64,.15) 0%,
+    rgba(10,18,64,.1)  50%,
+    rgba(10,18,64,.6)  100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Caption */
+.lc__caption {
+  position: absolute;
+  bottom: 36px;
+  left: 14px;
+  right: 14px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.75);
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Dots */
+.lc__dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.lc__dot {
+  width: 6px; height: 6px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.35);
+  border: none; cursor: pointer; padding: 0;
+  transition: background 300ms ease, width 300ms ease;
+}
+
+.lc__dot--active { background: #fff; width: 18px; }
+
+/* Arrows */
+.lc__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 250ms ease, background 250ms ease, transform 250ms ease;
+}
+
+.lc:hover .lc__arrow { opacity: 1; }
+
+.lc__arrow--prev { left: 10px; }
+.lc__arrow--next { right: 10px; }
+.lc__arrow--prev:hover { background: rgba(255,255,255,.32); transform: translateY(-50%) scale(1.1); }
+.lc__arrow--next:hover { background: rgba(255,255,255,.32); transform: translateY(-50%) scale(1.1); }

@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════════════════
+   LibraGate NEU — Global Styles
+   Fonts: Poppins (primary UI) + DM Sans (body) + Fraunces (display)
+═══════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:          #1a2456;
+  --navy-dark:     #111840;
+  --navy-mid:      #243070;
+  --navy-light:    #2d3a8c;
+  --navy-pale:     #eef0fb;
+  --navy-ghost:    #f4f5fb;
+  --amber:         #e8a020;
+  --amber-light:   #f5b83a;
+  --amber-pale:    #fef3d6;
+  --surface:       #ffffff;
+  --surface-2:     #f7f8fc;
+  --surface-3:     #f0f2f8;
+  --border:        #e4e7f0;
+  --border-light:  #eef0f6;
+  --text:          #0f1420;
+  --text-2:        #4a5068;
+  --text-3:        #8a90b0;
+  --success:       #16a34a;
+  --success-pale:  #dcfce7;
+  --danger:        #dc2626;
+  --danger-pale:   #fee2e2;
+  --warning:       #d97706;
+  --warning-pale:  #fef3c7;
+  --info:          #0284c7;
+  --info-pale:     #e0f2fe;
+  --shadow-xs:  0 1px 2px rgba(15,20,64,.04);
+  --shadow-sm:  0 2px 8px rgba(15,20,64,.06), 0 1px 2px rgba(15,20,64,.04);
+  --shadow:     0 4px 20px rgba(15,20,64,.08), 0 2px 6px rgba(15,20,64,.04);
+  --shadow-md:  0 8px 30px rgba(15,20,64,.10), 0 2px 8px rgba(15,20,64,.05);
+  --shadow-lg:  0 16px 48px rgba(15,20,64,.14), 0 4px 12px rgba(15,20,64,.06);
+  --r-xs:  4px;  --r-sm: 8px;  --r: 12px;  --r-lg: 16px;
+  --r-xl:  20px; --r-2xl: 28px; --r-full: 9999px;
+  --font:         'DM Sans', sans-serif;
+  --font-display: 'Fraunces', serif;
+  --t:    220ms cubic-bezier(.4,0,.2,1);
+  --t-md: 360ms cubic-bezier(.4,0,.2,1);
+  --t-lg: 520ms cubic-bezier(.16,1,.3,1);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--surface-2);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+button { font-family: var(--font); cursor: pointer; border: none; background: none; }
+input, select, textarea { font-family: var(--font); }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+/* Animation keyframes and utility classes → see styles/animations.css */
+
+@keyframes fadeUp    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+@keyframes scaleIn   { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+@keyframes spin      { to{transform:rotate(360deg)} }
+@keyframes shimmer   { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes ping      { 0%{transform:scale(1);opacity:1} 75%,100%{transform:scale(2);opacity:0} }
+
+.anim-fade-up    { animation: fadeUp  360ms cubic-bezier(.16,1,.3,1) both; }
+.anim-fade-in    { animation: fadeIn  360ms ease-in-out both; }
+.anim-scale-in   { animation: scaleIn 360ms cubic-bezier(.16,1,.3,1) both; }
+.anim-pulse      { animation: pulse  2s ease-in-out infinite; }
+
+.delay-1{animation-delay: 80ms}  .delay-2{animation-delay:150ms} .delay-3{animation-delay:220ms}
+.delay-4{animation-delay:290ms}  .delay-5{animation-delay:360ms} .delay-6{animation-delay:430ms}
+
+.skeleton {
+  background: linear-gradient(90deg,var(--surface-3) 25%,var(--border-light) 50%,var(--surface-3) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: var(--r-sm);
+}
+.badge {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:3px 10px; border-radius:var(--r-full);
+  font-size:.72rem; font-weight:600; letter-spacing:.2px;
+}
+.badge--green { background:var(--success-pale); color:var(--success); }
+.badge--red   { background:var(--danger-pale);  color:var(--danger); }
+.badge--amber { background:var(--amber-pale);   color:var(--warning); }
+.badge--navy  { background:var(--navy-pale);    color:var(--navy-light); }
+.badge--gray  { background:var(--surface-3);    color:var(--text-2); }
+
+.live-dot {
+  display:inline-block; width:7px; height:7px;
+  border-radius:50%; background:var(--success); position:relative;
+}
+.live-dot::after {
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background:var(--success); animation:ping 1.4s cubic-bezier(0,0,.2,1) infinite;
+}
+.card {
+  background:var(--surface); border:1px solid var(--border-light);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-sm);
+}

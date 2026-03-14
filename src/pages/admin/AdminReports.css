@@ -1,0 +1,156 @@
+/* ═══════════════════════════════════════════════
+   AdminReports.css  (all values hardcoded)
+═══════════════════════════════════════════════ */
+
+.ar {
+  
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ── Page header ── */
+.ar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.ar__head h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #0f1420;
+  letter-spacing: -.4px;
+  margin-bottom: 4px;
+}
+
+.ar__head h1 svg { color: #2d3a8c; }
+.ar__head p { font-size: .875rem; color: #4a5068; }
+
+/* ── Summary cards ── */
+.ar__cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ar__card {
+  background: #ffffff;
+  border: 1px solid #e4e7f0;
+  border-radius: 16px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 2px 8px rgba(15,20,64,.05);
+  transition: box-shadow 320ms cubic-bezier(.4,0,.2,1), transform 320ms cubic-bezier(.34,1.56,.64,1);
+  cursor: default;
+}
+
+.ar__card:hover {
+  box-shadow: 0 6px 24px rgba(15,20,64,.1);
+  transform: translateY(-3px);
+}
+
+.ar__card-val {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #0f1420;
+  line-height: 1;
+  margin-bottom: 6px;
+  letter-spacing: -.5px;
+}
+
+.ar__card-label {
+  font-size: .75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ── Chart card ── */
+.ar__chart {
+  background: #ffffff;
+  border: 1px solid #e4e7f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(15,20,64,.05);
+  margin-bottom: 20px;
+}
+
+.ar__chart-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .84rem;
+  font-weight: 700;
+  color: #0f1420;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eef0f6;
+}
+
+.ar__chart-head svg { color: #2d3a8c; }
+
+/* ── College rows ── */
+.ar__row {
+  display: grid;
+  grid-template-columns: 140px 1fr 36px;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+}
+
+.ar__row-name {
+  font-size: .78rem;
+  font-weight: 600;
+  color: #0f1420;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ar__row-bar-wrap {
+  height: 10px;
+  background: #f0f2f8;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.ar__row-bar {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 700ms cubic-bezier(.25,.46,.45,.94);
+  min-width: 4px;
+}
+
+.ar__row-n {
+  font-size: .78rem;
+  font-weight: 600;
+  color: #4a5068;
+  text-align: right;
+}
+
+/* ── Empty state ── */
+.ar__empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #8a90b0;
+  font-size: .875rem;
+}
+
+/* ── Animations ── */
+.anim-fade-up { animation: arFadeUp 400ms cubic-bezier(.16,1,.3,1) both; }
+.delay-1 { animation-delay: .05s; }
+.delay-2 { animation-delay: .10s; }
+.delay-3 { animation-delay: .15s; }
+.delay-4 { animation-delay: .20s; }
+
+@keyframes arFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .ar__cards { grid-template-columns: 1fr 1fr; }
+  .ar__row   { grid-template-columns: 100px 1fr 28px; }
+}

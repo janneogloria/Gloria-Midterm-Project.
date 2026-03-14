@@ -1,0 +1,148 @@
+/* ═══════════════════════════════════════════════════════════════
+   PageTransition.css — slow, silky smooth transitions
+   Core easing: cubic-bezier(.22, 1, .36, 1)
+   This curve has a very gentle start and a long, drawn-out
+   deceleration — the closest CSS can get to "liquid" motion.
+═══════════════════════════════════════════════════════════════ */
+
+.pt {
+  width: 100%;
+  min-height: 100%;
+  will-change: opacity, transform;
+  transform-origin: center top;
+  /* Never create a new stacking context that would clip fixed children */
+  isolation: auto;
+}
+
+.pt--idle {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN PAGE ENTER
+   750ms — long enough to feel deliberate and smooth.
+   Only 8px rise and 0.5% scale so it's barely perceptible
+   as movement — more like a "materialisation."
+   Blur clears in the first 35% so text is readable quickly.
+══════════════════════════════════════════════════════════════ */
+.pt--enter {
+  animation: ptEnter 750ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes ptEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOGIN — split panel entrance
+   Panels drift in very slowly from each side (only 20px).
+   Left panel and right panel start simultaneously but the
+   right is delayed 100ms for a gentle cascade.
+══════════════════════════════════════════════════════════════ */
+.pt--enter .auth__panel {
+  animation: ptDriftRight 900ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.pt--enter .auth__main {
+  animation: ptDriftLeft 900ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: 100ms;
+}
+
+@keyframes ptDriftRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ptDriftLeft {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOGIN CARD SECTIONS — mode cards, form fields drift up
+   Staggered so each section arrives after the panel settles.
+══════════════════════════════════════════════════════════════ */
+.pt--enter .auth__hd {
+  animation: ptRise 700ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: 200ms;
+}
+
+.pt--enter .mode-grid,
+.pt--enter .auth__section form {
+  animation: ptRise 700ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: 280ms;
+}
+
+@keyframes ptRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VISITOR PAGE — header, banner, tabs, body stagger
+   Each layer waits for the previous one to mostly settle.
+══════════════════════════════════════════════════════════════ */
+.pt--enter .vh__header {
+  animation: ptFadeDown 650ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.pt--enter .vh__banner {
+  animation: ptRise 700ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: 80ms;
+}
+
+.pt--enter .vh__tabs {
+  animation: ptRise 700ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: 160ms;
+}
+
+.pt--enter .vh__body {
+  animation: ptRise 750ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: 240ms;
+}
+
+@keyframes ptFadeDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN — content area rises, sidebar is EXCLUDED from animation
+   because it's position:fixed and persists across page changes.
+══════════════════════════════════════════════════════════════ */
+.pt--enter .sl-content {
+  animation: ptRise 750ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: 80ms;
+}
+
+/* Explicitly prevent the sidebar from being animated */
+.pt--enter .sl-sidebar {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REDUCED MOTION
+══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .pt,
+  .pt--enter,
+  .pt--enter * {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
+    filter:                    none   !important;
+    opacity:                   1      !important;
+    transform:                 none   !important;
+  }
+}
