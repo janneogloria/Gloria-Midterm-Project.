@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 📚 LibraLog — NEU Library Logger
 
 A real-time library visitor logging system for New Era University.
@@ -31,3 +32,7 @@ npm start
 ```
 
 See the PDF setup guide for complete Firebase + Vercel setup instructions.
+=======
+# Gloria-Midterm-Project.
+NEU library login system
+>>>>>>> 576dd52bc919cbeb5dae9769ed7b7209bea2dfe0
