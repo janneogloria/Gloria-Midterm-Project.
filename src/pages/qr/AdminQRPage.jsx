@@ -53,7 +53,7 @@ export default function AdminQRPage() {
         setStatus('success');
 
         setTimeout(() => {
-          navigate(`/login?qr_admin=${encoded}&email=${encodeURIComponent(adminEmail)}`, { replace: true });
+          navigate(`/login?qr_admin=${payload}&email=${encodeURIComponent(adminEmail)}`, { replace: true });
         }, 1500);
 
       } catch (err) {
