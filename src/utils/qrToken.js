@@ -1,19 +1,13 @@
 /**
  * utils/qrToken.js
- * Secure token generation for QR codes.
- * Uses Web Crypto API (built into browsers — no extra package needed).
+ * QR code payload encoding/decoding.
+ * Uses base64url — no external packages.
  *
- * VISITOR QR:  encodes { type:'visitor', uid, name, email }
- *              — shows their visit history when scanned
- *
- * ADMIN QR:    encodes { type:'admin', uid, token, exp }
- *              — token is a one-time login token stored in Firestore
- *              — expires after 5 minutes for security
+ * VISITOR QR:  { type:'visitor', uid, name, email }
+ * ADMIN QR:    { type:'admin', uid, token, exp }
  */
 
-const BASE_URL = window.location.origin;
-
-/* ── Encode / decode payload as base64url ──────────────────── */
+/* ── Encode / decode ── */
 export function encodePayload(obj) {
   const json = JSON.stringify(obj);
   return btoa(encodeURIComponent(json))
@@ -33,19 +27,24 @@ export function decodePayload(str) {
   }
 }
 
-/* ── Visitor QR URL ─────────────────────────────────────────── */
-export function makeVisitorQRData(uid, name, email) {
-  const payload = encodePayload({ type: 'visitor', uid, name, email });
-  return `${BASE_URL}/qr/visitor/${payload}`;
+/* Use window.location inside functions to avoid top-level SSR issues */
+function getBaseUrl() {
+  return typeof window !== 'undefined' ? window.location.origin : 'https://libragate-neu.vercel.app';
 }
 
-/* ── Admin QR data (token stored in Firestore separately) ───── */
+/* ── Visitor QR URL ── */
+export function makeVisitorQRData(uid, name, email) {
+  const payload = encodePayload({ type: 'visitor', uid, name, email });
+  return `${getBaseUrl()}/qr/visitor/${payload}`;
+}
+
+/* ── Admin QR URL ── */
 export function makeAdminQRData(uid, loginToken) {
   const payload = encodePayload({
     type:  'admin',
     uid,
     token: loginToken,
-    exp:   Date.now() + 5 * 60 * 1000, // 5 min expiry hint (enforced server-side)
+    exp:   Date.now() + 5 * 60 * 1000,
   });
-  return `${BASE_URL}/qr/admin/${payload}`;
+  return `${getBaseUrl()}/qr/admin/${payload}`;
 }

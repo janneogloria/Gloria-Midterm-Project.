@@ -1,4 +1,4 @@
-import { format, formatDistanceToNow, startOfWeek } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 export const toDate = (ts) => {
   if (!ts) return null;

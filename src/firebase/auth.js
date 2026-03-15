@@ -57,7 +57,7 @@ export const signInWithGoogle = async () => {
 };
 
 /* ── Visitor: register with email/password ───────────────────────────────── */
-export const registerVisitor = async (email, password, displayName) => {
+export const registerVisitor = async (email, password, displayName, studentNumber = '') => {
   let firebaseUser;
 
   try {
@@ -65,39 +65,34 @@ export const registerVisitor = async (email, password, displayName) => {
     firebaseUser = user;
   } catch (err) {
     if (err.code === 'auth/email-already-in-use') {
-      // Try to sign in — maybe the account exists but has no Firestore doc (orphaned)
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       firebaseUser = user;
 
       const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
       if (snap.exists()) {
-        // Fully registered visitor — signed in, redirect will fire via useAuth
         return firebaseUser;
       }
-      // Orphaned account — fall through to create the Firestore doc
     } else {
       throw err;
     }
   }
 
-  // Update Firebase Auth profile
   await updateProfile(firebaseUser, { displayName });
 
-  // Write Firestore doc — MUST complete before resolveRole is called
   await setDoc(doc(db, 'users', firebaseUser.uid), {
-    uid:       firebaseUser.uid,
-    email:     firebaseUser.email,
-    name:      displayName,
+    uid:           firebaseUser.uid,
+    email:         firebaseUser.email,
+    name:          displayName,
     displayName,
-    photoURL:  '',
-    college:   '',
-    role:      'visitor',
-    blocked:   false,
-    createdAt: serverTimestamp(),
-    lastLogin: serverTimestamp(),
+    photoURL:      '',
+    college:       '',
+    studentNumber: studentNumber || '',
+    role:          'visitor',
+    blocked:       false,
+    createdAt:     serverTimestamp(),
+    lastLogin:     serverTimestamp(),
   });
 
-  // Return after Firestore write is confirmed — useAuth will pick up the role
   return firebaseUser;
 };
 

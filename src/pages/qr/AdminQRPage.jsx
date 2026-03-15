@@ -1,21 +1,22 @@
 /**
- * AdminQRPage.jsx — Auto-login page when admin QR is scanned
+ * AdminQRPage.jsx
+ * Shown when an admin QR code is scanned.
+ * Validates the one-time token, then redirects to login
+ * with the admin's email pre-filled for confirmation.
  */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { decodePayload } from '../../utils/qrToken';
 import { consumeAdminQRToken } from '../../firebase/firestore';
-import { signInWithCustomToken } from 'firebase/auth';
-import { auth } from '../../firebase/config';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { CheckCircle, XCircle } from 'lucide-react';
 import './QRPage.css';
 
 export default function AdminQRPage() {
   const { payload } = useParams();
   const navigate    = useNavigate();
-  const [status, setStatus] = useState('scanning'); // scanning | logging-in | success | error
+  const [status,  setStatus]  = useState('scanning');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -30,40 +31,41 @@ export default function AdminQRPage() {
 
       if (Date.now() > decoded.exp) {
         setStatus('error');
-        setMessage('This QR code has expired. Please generate a new one from the Settings page.');
+        setMessage('This QR code has expired. Please generate a new one from Settings.');
         return;
       }
 
       setStatus('logging-in');
 
       try {
-        // Validate + consume token from Firestore
         const uid = await consumeAdminQRToken(decoded.token);
 
-        // Get admin's email from Firestore admins collection
         const adminSnap = await getDoc(doc(db, 'admins', uid));
         if (!adminSnap.exists()) throw new Error('Admin account not found.');
 
-        // We cannot sign in without password via QR alone in client-side Firebase.
-        // Instead we store a flag in Firestore and redirect to a special login handler.
-        // The admin will be redirected to dashboard with the QR token verification done.
-        // For full auto-login, a Firebase Cloud Function would be needed.
-        // For now: redirect to login with a verified token param that pre-fills email.
         const adminEmail = adminSnap.data().email;
         setStatus('success');
 
+        // Redirect to login with email pre-filled and a verified flag
+        // Full passwordless login requires Firebase Admin SDK (server-side)
+        // This flow confirms the QR is valid and pre-fills admin's email
         setTimeout(() => {
-          navigate(`/login?qr_admin=${payload}&email=${encodeURIComponent(adminEmail)}`, { replace: true });
+          navigate(
+            `/login?qr_verified=1&email=${encodeURIComponent(adminEmail)}`,
+            { replace: true }
+          );
         }, 1500);
 
       } catch (err) {
         setStatus('error');
         if (err.message === 'TOKEN_USED')
-          setMessage('This QR code has already been used. Generate a new one.');
+          setMessage('This QR code has already been used. Please generate a new one.');
         else if (err.message === 'TOKEN_EXPIRED')
           setMessage('This QR code has expired. Please generate a new one.');
+        else if (err.message === 'INVALID_TOKEN')
+          setMessage('This QR code is invalid. Please generate a new one.');
         else
-          setMessage('Failed to authenticate. Please try again.');
+          setMessage('Verification failed. Please try again or sign in manually.');
       }
     };
 
@@ -75,32 +77,25 @@ export default function AdminQRPage() {
       <div className="qrp__login-card">
         <img src="/images/LibraGateNEU.png" alt="LibraGate NEU" className="qrp__login-logo"/>
         <div className="qrp__login-title">LibraGate NEU</div>
-        <div className="qrp__login-sub">Administrator Access</div>
+        <div className="qrp__login-sub">Administrator QR Access</div>
 
-        {status === 'scanning' && (
+        {(status === 'scanning' || status === 'logging-in') && (
           <div className="qrp__login-state">
             <div className="qrp__spinner"/>
-            <span>Validating QR code...</span>
-          </div>
-        )}
-
-        {status === 'logging-in' && (
-          <div className="qrp__login-state">
-            <div className="qrp__spinner"/>
-            <span>Verifying credentials...</span>
+            <span>{status === 'scanning' ? 'Validating QR code…' : 'Verifying credentials…'}</span>
           </div>
         )}
 
         {status === 'success' && (
           <div className="qrp__login-state qrp__login-state--success">
-            <div className="qrp__check">check</div>
-            <span>Verified! Redirecting...</span>
+            <CheckCircle size={44} strokeWidth={1.5} color="#16a34a"/>
+            <span>Verified! Redirecting to login…</span>
           </div>
         )}
 
         {status === 'error' && (
           <div className="qrp__login-state qrp__login-state--error">
-            <div className="qrp__error-icon-sm">X</div>
+            <XCircle size={44} strokeWidth={1.5} color="#dc2626"/>
             <span>{message}</span>
             <button className="qrp__back-btn" onClick={() => navigate('/login')}>
               Back to Login

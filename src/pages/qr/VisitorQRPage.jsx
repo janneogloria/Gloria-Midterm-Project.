@@ -1,12 +1,14 @@
 /**
- * VisitorQRPage.jsx — Public page when visitor QR is scanned
+ * VisitorQRPage.jsx
+ * Public page shown when a visitor's QR code is scanned.
+ * URL: /qr/visitor/:payload
  */
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { decodePayload } from '../../utils/qrToken';
 import { fetchVisitorLogs } from '../../firebase/firestore';
 import { formatDate, formatTime, calcDuration, PURPOSE_ICONS } from '../../utils/helpers';
-import { BookOpen, Clock, CalendarDays, Timer, User } from 'lucide-react';
+import { BookOpen, Clock, CalendarDays, Timer, ShieldCheck } from 'lucide-react';
 import './QRPage.css';
 
 export default function VisitorQRPage() {
@@ -33,13 +35,13 @@ export default function VisitorQRPage() {
   if (loading) return (
     <div className="qrp qrp--loading">
       <div className="qrp__spinner"/>
-      <span>Loading visit records...</span>
+      <span>Loading visit records…</span>
     </div>
   );
 
   if (error) return (
     <div className="qrp qrp--error">
-      <div className="qrp__error-icon">warning</div>
+      <div style={{ fontSize: '2.5rem' }}>⚠️</div>
       <h2>Invalid QR Code</h2>
       <p>{error}</p>
     </div>
@@ -48,8 +50,13 @@ export default function VisitorQRPage() {
   const total     = logs.length;
   const completed = logs.filter(l => l.status === 'out').length;
 
+  const initials = (data.name || 'U')
+    .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
   return (
     <div className="qrp">
+
+      {/* Header */}
       <div className="qrp__header">
         <div className="qrp__brand">
           <img src="/images/LibraGateNEU.png" alt="LibraGate NEU" className="qrp__brand-logo"/>
@@ -60,17 +67,19 @@ export default function VisitorQRPage() {
         </div>
       </div>
 
+      {/* Profile */}
       <div className="qrp__profile">
-        <div className="qrp__avatar">
-          {(data.name || 'U').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()}
-        </div>
+        <div className="qrp__avatar">{initials}</div>
         <div className="qrp__profile-info">
           <div className="qrp__profile-name">{data.name}</div>
           <div className="qrp__profile-email">{data.email}</div>
-          <div className="qrp__profile-badge"><User size={11}/> Verified Visitor</div>
+          <div className="qrp__profile-badge">
+            <ShieldCheck size={11}/> Verified Visitor
+          </div>
         </div>
       </div>
 
+      {/* Stats */}
       <div className="qrp__stats">
         {[
           { label: 'Total Visits', val: total },
@@ -84,8 +93,12 @@ export default function VisitorQRPage() {
         ))}
       </div>
 
+      {/* Log */}
       <div className="qrp__section">
-        <div className="qrp__section-head"><Clock size={15}/> Visit History</div>
+        <div className="qrp__section-head">
+          <Clock size={14}/> Visit History
+        </div>
+
         {logs.length === 0 ? (
           <div className="qrp__empty">
             <BookOpen size={28} strokeWidth={1.2}/>
@@ -95,18 +108,26 @@ export default function VisitorQRPage() {
           <div className="qrp__logs">
             {logs.map(log => (
               <div key={log.id} className="qrp__log">
-                <div className="qrp__log-icon">{PURPOSE_ICONS[log.purpose] || 'note'}</div>
+                <div className="qrp__log-icon">
+                  {PURPOSE_ICONS[log.purpose] || '📌'}
+                </div>
                 <div className="qrp__log-body">
                   <div className="qrp__log-purpose">{log.purpose}</div>
                   <div className="qrp__log-meta">
                     <span><CalendarDays size={11}/>{formatDate(log.timeIn)}</span>
-                    <span><Clock size={11}/>{formatTime(log.timeIn)}{log.timeOut ? ` - ${formatTime(log.timeOut)}` : ''}</span>
-                    {log.timeOut && <span><Timer size={11}/>{calcDuration(log.timeIn, log.timeOut)}</span>}
+                    <span>
+                      <Clock size={11}/>
+                      {formatTime(log.timeIn)}
+                      {log.timeOut ? ` – ${formatTime(log.timeOut)}` : ''}
+                    </span>
+                    {log.timeOut && (
+                      <span><Timer size={11}/>{calcDuration(log.timeIn, log.timeOut)}</span>
+                    )}
                   </div>
                   <div className="qrp__log-college">{log.college}</div>
                 </div>
                 <span className={`qrp__log-status qrp__log-status--${log.status}`}>
-                  {log.status === 'in' ? 'Inside' : 'Done'}
+                  {log.status === 'in' ? '● Inside' : '✓ Done'}
                 </span>
               </div>
             ))}
@@ -115,7 +136,7 @@ export default function VisitorQRPage() {
       </div>
 
       <div className="qrp__footer">
-        {new Date().getFullYear()} New Era University - Library Services
+        © {new Date().getFullYear()} New Era University · Library Services
       </div>
     </div>
   );
