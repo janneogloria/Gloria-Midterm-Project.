@@ -22,14 +22,13 @@ function StatCard({ label, value, icon: Icon, color, delay }) {
 export default function AdminDashboard() {
   const [stats,   setStats]   = useState(null);
   const [active,  setActive]  = useState([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadStats = async () => {
     try {
       const s = await fetchDashboardStats();
       setStats(s);
-    } finally { setLoading(false); setRefreshing(false); }
+    } finally { setRefreshing(false); }
   };
 
   useEffect(() => { loadStats(); }, []);

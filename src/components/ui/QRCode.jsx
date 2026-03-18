@@ -16,28 +16,6 @@ import React, { useEffect, useRef } from 'react';
 // We load qrcode-generator via a dynamic script tag the first time,
 // then draw to canvas. This avoids needing to install a package.
 
-let qrLib = null;
-let loadPromise = null;
-
-function loadQRLib() {
-  if (qrLib) return Promise.resolve(qrLib);
-  if (loadPromise) return loadPromise;
-
-  loadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-    script.onload = () => {
-      // QRCode is now on window — but we use a canvas draw ourselves
-      // Actually, let's use the simpler qrcode-generator library
-      resolve(true);
-    };
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-
-  return loadPromise;
-}
-
 /* ── Pure-JS QR drawing using a data URL approach ── */
 // We'll use the Web-based QR API via a hidden div rendered by QRCode library
 export default function QRCode({ value, size = 200, fgColor = '#0f1b5c', bgColor = '#ffffff' }) {

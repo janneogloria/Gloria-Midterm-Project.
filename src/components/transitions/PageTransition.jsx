@@ -10,7 +10,6 @@ import './PageTransition.css';
 export default function PageTransition({ children }) {
   const location  = useLocation();
   const [phase, setPhase] = useState('enter'); // 'enter' | 'idle' | 'exit'
-  const prevKey   = useRef(location.key);
   const timerRef  = useRef(null);
 
   useEffect(() => {

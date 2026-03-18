@@ -37,7 +37,6 @@ function AdminLayout({ children }) {
      inside an animated wrapper (which would break position:fixed) */
 function AnimatedRoutes() {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
 
   return (
     <Routes location={location}>
