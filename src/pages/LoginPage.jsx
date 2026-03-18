@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { signInWithGoogle, loginUser, resetPassword } from '../firebase/auth';
 import toast from 'react-hot-toast';
-import { BookOpen, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Users, Shield, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Users, Shield, Sparkles } from 'lucide-react';
 import './LoginPage.css';
 
 const GoogleIcon = () => (

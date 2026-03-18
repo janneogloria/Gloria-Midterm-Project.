@@ -15,8 +15,8 @@ import { signInWithGoogle, loginUser, registerUser, registerVisitor, resetPasswo
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import {
-  BookOpen, Mail, Lock, Eye, EyeOff, User,
-  ArrowLeft, CheckCircle, Shield, ArrowRight,
+  Mail, Lock, Eye, EyeOff, User,
+  ArrowLeft, CheckCircle, Shield, ArrowRight, Hash,
 } from 'lucide-react';
 import './Login.css';
 
@@ -163,7 +163,7 @@ export default function Login() {
   /* form state */
   const [vlf, setVlf] = useState({ email: '', password: '' });
   const [vle, setVle] = useState({});
-  const [vrf, setVrf] = useState({ name: '', email: '', password: '', confirm: '' });
+  const [vrf, setVrf] = useState({ name: '', email: '', studentNumber: '', password: '', confirm: '' });
   const [vre, setVre] = useState({});
   const [alf, setAlf] = useState({ email: '', password: '' });
   const [ale, setAle] = useState({});
@@ -220,6 +220,9 @@ export default function Login() {
     if (!vrf.name.trim())  errs.name     = 'Full name is required.';
     if (!vrf.email)        errs.email    = 'Email is required.';
     else if (!vrf.email.endsWith('@neu.edu.ph')) errs.email = 'Must be a @neu.edu.ph address.';
+    // Student number: optional for faculty, validated if provided
+    if (vrf.studentNumber && !/^\d{2}-\d{5}-\d{3}$/.test(vrf.studentNumber.trim()))
+      errs.studentNumber = 'Format must be XX-XXXXX-XXX (e.g. 24-13702-736). Leave blank if faculty.';
     if (!vrf.password)     errs.password = 'Password is required.';
     else if (vrf.password.length < 6)            errs.password = 'At least 6 characters.';
     if (vrf.confirm !== vrf.password)            errs.confirm  = 'Passwords do not match.';
@@ -228,7 +231,7 @@ export default function Login() {
     setVre({});
     setLoading(true);
     try {
-      await registerVisitor(vrf.email, vrf.password, vrf.name.trim());
+      await registerVisitor(vrf.email, vrf.password, vrf.name.trim(), vrf.studentNumber.trim());
       // registerVisitor awaits the Firestore write before returning.
       // Firebase Auth auto signs-in on createUserWithEmailAndPassword,
       // so onAuthStateChanged fires, useAuth resolves the role with retry,
@@ -482,6 +485,14 @@ export default function Login() {
                     value={vrf.email}
                     onChange={e => setVrf(f => ({...f, email: e.target.value}))}
                     autoComplete="email"/>
+                </Field>
+                <Field label="Student Number (optional — leave blank if faculty)" icon={Hash} error={vre.studentNumber}>
+                  <input type="text" className="lf__input"
+                    placeholder="24-13702-736"
+                    value={vrf.studentNumber}
+                    onChange={e => setVrf(f => ({...f, studentNumber: e.target.value}))}
+                    autoComplete="off"
+                    maxLength={12}/>
                 </Field>
                 <PwField label="Password"
                   value={vrf.password}

@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoutUser } from '../../firebase/auth';
-import { BookOpen, Home, Clock, User, LogOut, Menu, X } from 'lucide-react';
+import { Home, Clock, User, LogOut, Menu, X } from 'lucide-react';
 import { getInitials, getAvatarColor } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 import './VisitorLayout.css';
