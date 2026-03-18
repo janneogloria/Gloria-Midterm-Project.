@@ -496,7 +496,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Responsive ── */
+/* ── Responsive ── w*/
 @media (max-width: 900px) {
   .auth__panel { display: none; }
   .auth__main  { padding: 40px 24px; }
