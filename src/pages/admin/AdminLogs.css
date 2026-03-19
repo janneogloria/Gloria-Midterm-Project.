@@ -33,3 +33,43 @@
 .al-page__active { font-size:.75rem; color:var(--success); font-weight:600; }
 
 @media (max-width:600px) { .al-page { padding:20px 16px; } }
+
+/* ── Filter button ── */
+.al-filter-btn {
+  display:flex; align-items:center; gap:6px;
+  padding:0 12px; height:34px; border-radius:8px;
+  border:1.5px solid #e4e7f0; background:#fff;
+  font-size:.76rem; font-weight:600; font-family:'Poppins',sans-serif;
+  color:#4a5068; cursor:pointer; position:relative;
+  transition:background 200ms,border-color 200ms,color 200ms;
+}
+.al-filter-btn:hover, .al-filter-btn--active { background:#eef0fb; border-color:#c5caea; color:#2d3a8c; }
+.al-filter-dot { width:7px; height:7px; background:#2d3a8c; border-radius:50%; flex-shrink:0; }
+
+/* ── Dropdown filter panel ── */
+.al-dropdown-filters { padding:14px 16px; margin-bottom:14px; }
+.al-dropdown-filters__inner { display:flex; gap:12px; flex-wrap:wrap; }
+.al-filter-group { display:flex; flex-direction:column; gap:4px; flex:1; min-width:160px; }
+.al-filter-group label { font-size:.68rem; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.5px; }
+.al-filter-group select {
+  height:34px; padding:0 10px; border:1.5px solid #e4e7f0; border-radius:7px;
+  font-size:.78rem; font-family:'Poppins',sans-serif; color:#0f1420; background:#fff;
+  outline:none; -webkit-appearance:none; appearance:none;
+  transition:border-color 200ms;
+}
+.al-filter-group select:focus { border-color:#2d3a8c; }
+
+/* ── Visitor type tag ── */
+.al-type-tag {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 9px; border-radius:99px; font-size:.67rem; font-weight:600; white-space:nowrap;
+}
+.al-type-tag--faculty-\/-staff { background:#f3e8ff; color:#7c3aed; }
+.al-type-tag--student          { background:#dbeafe; color:#1d4ed8; }
+.al-type-tag--visitor          { background:#dcfce7; color:#15803d; }
+
+/* ── Log time ── */
+.al-page__time { font-size:.78rem; font-weight:600; color:#2d3a8c; }
+
+/* ── Badge extras ── */
+.badge--navy { background:#eef0fb; color:#2d3a8c; }

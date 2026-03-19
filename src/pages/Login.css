@@ -496,7 +496,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Responsive ── w*/
+/* ── Responsive ── */
 @media (max-width: 900px) {
   .auth__panel { display: none; }
   .auth__main  { padding: 40px 24px; }
@@ -506,3 +506,34 @@
   .auth__main { padding: 28px 16px; }
   .auth__hd h2 { font-size: 1.35rem; }
 }
+
+/* ── Visitor note ── */
+.auth__visitor-note {
+  display:flex; align-items:flex-start; gap:8px;
+  padding:12px 14px; background:#eff6ff;
+  border:1px solid #bfdbfe; border-radius:10px;
+  font-size:.74rem; color:#1e40af; line-height:1.55; margin-top:16px;
+}
+.auth__visitor-note svg { flex-shrink:0; margin-top:1px; }
+
+/* ── Visitor role selection ── */
+.auth__role-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+.auth__role-card {
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  padding:20px 12px; background:#fff;
+  border:2px solid #e4e7f0; border-radius:14px;
+  cursor:pointer; font-family:'Poppins',sans-serif;
+  transition:border-color 280ms ease, box-shadow 280ms ease, transform 280ms cubic-bezier(.34,1.4,.64,1), background 280ms ease;
+  text-align:center;
+}
+.auth__role-card:hover {
+  border-color:#c5caea; box-shadow:0 4px 16px rgba(45,58,140,.1);
+  transform:translateY(-3px);
+}
+.auth__role-card--active {
+  border-color:#2d3a8c; background:#eef0fb;
+  box-shadow:0 0 0 3px rgba(45,58,140,.12); transform:translateY(-3px);
+}
+.auth__role-icon { font-size:2rem; line-height:1; }
+.auth__role-label { font-size:.88rem; font-weight:700; color:#0f1420; }
+.auth__role-desc  { font-size:.7rem; color:#6b7280; line-height:1.4; }
