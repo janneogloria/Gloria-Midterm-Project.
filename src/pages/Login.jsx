@@ -12,7 +12,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  signInWithGoogle, loginUser, registerAdmin,
+  signInWithGoogle, loginUser, registerAdmin, registerVisitor,
   resetPassword, updateVisitorProfile,
 } from '../firebase/auth';
 import { useAuth } from '../hooks/useAuth';
@@ -129,9 +129,16 @@ export default function Login() {
   const [are, setAre] = useState({});
   const [fe,  setFe]  = useState('');
 
+  /* ── Visitor form state ── */
+  const [vlf, setVlf] = useState({ email: '', password: '' });
+  const [vle, setVle] = useState({});
+  const [vrf, setVrf] = useState({ name: '', email: '', password: '', confirm: '' });
+  const [vre, setVre] = useState({});
+
   const go = (v) => {
     setView(v);
     setAle({}); setAre({});
+    setVle({}); setVre({});
     setForgotOk(false);
   };
 
@@ -160,6 +167,56 @@ export default function Login() {
         toast.error('Pop-up was blocked. Please allow pop-ups for this site.');
       else
         toast.error('Google sign-in failed. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  /* ── Visitor email/password login ── */
+  const handleVisitorLogin = async (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!vlf.email)    errs.email    = 'Email is required.';
+    else if (!vlf.email.endsWith('@neu.edu.ph')) errs.email = 'Must be a @neu.edu.ph address.';
+    if (!vlf.password) errs.password = 'Password is required.';
+    if (Object.keys(errs).length) return setVle(errs);
+    setVle({}); setLoading(true);
+    try {
+      await loginUser(vlf.email, vlf.password);
+      // useEffect redirects based on role
+    } catch (err) {
+      const c = err.code;
+      if (c === 'auth/user-not-found' || c === 'auth/wrong-password' || c === 'auth/invalid-credential')
+        setVle({ password: 'Incorrect email or password.' });
+      else if (c === 'auth/too-many-requests')
+        toast.error('Too many attempts. Try again later.');
+      else toast.error('Sign in failed. Try again.');
+      setLoading(false);
+    }
+  };
+
+  /* ── Visitor register ── */
+  const handleVisitorRegister = async (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!vrf.name.trim())  errs.name     = 'Full name is required.';
+    if (!vrf.email)        errs.email    = 'Email is required.';
+    else if (!vrf.email.endsWith('@neu.edu.ph')) errs.email = 'Must be a @neu.edu.ph address.';
+    if (!vrf.password)     errs.password = 'Password is required.';
+    else if (vrf.password.length < 6) errs.password = 'At least 6 characters.';
+    if (vrf.confirm !== vrf.password) errs.confirm  = 'Passwords do not match.';
+    if (Object.keys(errs).length) return setVre(errs);
+    setVre({}); setLoading(true);
+    try {
+      await registerVisitor(vrf.email, vrf.password, vrf.name.trim());
+      toast.success('Account created! Signing you in… 🎉');
+      // useEffect redirects
+    } catch (err) {
+      const c = err.code;
+      if (c === 'auth/email-already-in-use')
+        setVre({ email: 'Email already registered. Try signing in instead.' });
+      else if (c === 'auth/weak-password')
+        setVre({ password: 'Password is too weak. Use at least 6 characters.' });
+      else toast.error('Registration failed. Try again.');
       setLoading(false);
     }
   };
@@ -324,7 +381,7 @@ export default function Login() {
             </div>
           )}
 
-          {/* VISITOR — Google only */}
+          {/* VISITOR — Google + Email/Password */}
           {view === 'visitor' && (
             <div className="auth__section anim-fade-up">
               <button className="auth__back" onClick={() => go('select')}>
@@ -332,20 +389,89 @@ export default function Login() {
               </button>
               <div className="auth__hd">
                 <h2>Student &amp; Faculty</h2>
-                <p>Sign in with your <strong>@neu.edu.ph</strong> Google account.</p>
+                <p>Sign in with your <strong>@neu.edu.ph</strong> account.</p>
               </div>
 
+              {/* Google sign-in */}
               <button className="google-btn" onClick={handleGoogle} disabled={loading}>
-                {loading ? <span className="btn-spin"/> : <GoogleLogo/>}
-                Continue with Google (@neu.edu.ph)
+                {loading ? <span className="btn-spin btn-spin--dark"/> : <GoogleLogo/>}
+                Continue with Google
               </button>
+
+              <div className="auth__divider">or sign in with email</div>
+
+              {/* Email / Password */}
+              <form onSubmit={handleVisitorLogin} noValidate>
+                <Field label="Email address (@neu.edu.ph)" icon={Mail} error={vle.email}>
+                  <input type="email" className="lf__input"
+                    placeholder="yourname@neu.edu.ph"
+                    value={vlf.email}
+                    onChange={e => setVlf(f => ({...f, email: e.target.value}))}
+                    autoComplete="email"/>
+                </Field>
+                <PwField label="Password"
+                  value={vlf.password}
+                  onChange={e => setVlf(f => ({...f, password: e.target.value}))}
+                  error={vle.password} autoComplete="current-password"/>
+                <button type="submit" className="btn btn--primary btn--full" disabled={loading}>
+                  {loading ? <><span className="btn-spin"/>Signing in…</> : 'Sign In'}
+                </button>
+              </form>
+
+              <p className="auth__switch">
+                No account yet?{' '}
+                <button className="auth__link" onClick={() => go('visitor-register')}>Create one</button>
+              </p>
 
               <div className="auth__visitor-note">
                 <BookOpen size={13}/>
-                <span>Only institutional email addresses are accepted. Personal Gmail accounts are not allowed.</span>
+                <span>Only @neu.edu.ph institutional email addresses are accepted.</span>
               </div>
+            </div>
+          )}
 
-              <p className="auth__footnote">New Era University · Library Services</p>
+          {/* VISITOR REGISTER */}
+          {view === 'visitor-register' && (
+            <div className="auth__section anim-fade-up">
+              <button className="auth__back" onClick={() => go('visitor')}>
+                <ArrowLeft size={14}/> Back to sign in
+              </button>
+              <div className="auth__hd">
+                <h2>Create Visitor Account</h2>
+                <p>Register with your <strong>@neu.edu.ph</strong> email address.</p>
+              </div>
+              <form onSubmit={handleVisitorRegister} noValidate>
+                <Field label="Full name" icon={GraduationCap} error={vre.name}>
+                  <input type="text" className="lf__input"
+                    placeholder="Juan Dela Cruz"
+                    value={vrf.name}
+                    onChange={e => setVrf(f => ({...f, name: e.target.value}))}
+                    autoComplete="name"/>
+                </Field>
+                <Field label="Email address (@neu.edu.ph)" icon={Mail} error={vre.email}>
+                  <input type="email" className="lf__input"
+                    placeholder="yourname@neu.edu.ph"
+                    value={vrf.email}
+                    onChange={e => setVrf(f => ({...f, email: e.target.value}))}
+                    autoComplete="email"/>
+                </Field>
+                <PwField label="Password"
+                  value={vrf.password}
+                  onChange={e => setVrf(f => ({...f, password: e.target.value}))}
+                  error={vre.password} autoComplete="new-password"/>
+                <PwField label="Confirm password"
+                  value={vrf.confirm}
+                  onChange={e => setVrf(f => ({...f, confirm: e.target.value}))}
+                  placeholder="Re-enter password"
+                  error={vre.confirm} autoComplete="new-password"/>
+                <button type="submit" className="btn btn--primary btn--full" disabled={loading}>
+                  {loading ? <><span className="btn-spin"/>Creating…</> : 'Create Account'}
+                </button>
+              </form>
+              <p className="auth__switch">
+                Already have an account?{' '}
+                <button className="auth__link" onClick={() => go('visitor')}>Sign in</button>
+              </p>
             </div>
           )}
 

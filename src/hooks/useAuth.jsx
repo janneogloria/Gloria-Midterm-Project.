@@ -8,55 +8,44 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
-import { resolveRole } from '../firebase/auth';
+import { resolveRole, checkRedirectResult } from '../firebase/auth';
 
 const AuthContext = createContext(null);
 
-/**
- * Tries resolveRole up to `maxAttempts` times with exponential backoff.
- * Necessary because after createUserWithEmailAndPassword Firebase Auth
- * fires onAuthStateChanged immediately, but the Firestore doc written
- * in registerVisitor/registerAdmin may not be visible yet.
- */
 async function resolveRoleWithRetry(uid, maxAttempts = 5) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const result = await resolveRole(uid);
-    if (result.role !== null) return result;          // found — done
+    if (result.role !== null) return result;
     if (attempt < maxAttempts - 1) {
-      // Wait with exponential backoff: 300ms, 600ms, 1200ms, 2400ms
       await new Promise(r => setTimeout(r, 300 * Math.pow(2, attempt)));
     }
   }
-  // All retries exhausted — return null role (user will stay on login page)
   return { role: null, profile: null };
 }
 
 export const AuthProvider = ({ children }) => {
-  const [user,    setUser]    = useState(undefined); // undefined = not yet resolved
+  const [user,    setUser]    = useState(undefined);
   const [role,    setRole]    = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Handle redirect-based Google sign-in (triggered when browser blocks popup).
+    // This runs once on mount and processes any pending redirect result.
+    checkRedirectResult().catch(() => {/* ignore — no redirect pending */});
+
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
-        setUser(null);
-        setRole(null);
-        setProfile(null);
+        setUser(null); setRole(null); setProfile(null);
         setLoading(false);
         return;
       }
-
       setUser(firebaseUser);
-
       try {
         const { role: r, profile: p } = await resolveRoleWithRetry(firebaseUser.uid);
-        setRole(r);
-        setProfile(p);
-      } catch (err) {
-        // BLOCKED error from resolveRole — user has been signed out
-        setRole(null);
-        setProfile(null);
+        setRole(r); setProfile(p);
+      } catch {
+        setRole(null); setProfile(null);
       } finally {
         setLoading(false);
       }
