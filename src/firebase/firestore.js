@@ -6,7 +6,7 @@
 import {
   collection, addDoc, updateDoc, doc, query, orderBy,
   onSnapshot, serverTimestamp, where, getDocs, getDoc,
-  setDoc, Timestamp,
+  setDoc, limit, Timestamp,
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -137,7 +137,7 @@ export const fetchDashboardStats = async () => {
     if (d.status === 'in') active++;
   });
 
-  return { today, week, month, active, byCollege };
+  return { today, week, month, active, byCollege, allLogs: all };
 };
 
 /* ════════════════════════════════════════════════════════════

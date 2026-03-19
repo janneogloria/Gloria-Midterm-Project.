@@ -182,7 +182,13 @@ export default function Login() {
   const handleGoogle = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const { isNew } = await signInWithGoogle();
+      if (isNew) {
+        toast.success('Welcome to NEU Library! 🎉');
+      } else {
+        toast.success('Welcome back to NEU Library! 👋');
+      }
+      // useEffect will redirect via role
     } catch (err) {
       if (err.message === 'WRONG_DOMAIN')
         toast.error('Only @neu.edu.ph accounts are allowed.');
@@ -190,7 +196,8 @@ export default function Login() {
         toast.error('Your account has been blocked. Contact the library admin.');
       else if (err.code !== 'auth/popup-closed-by-user')
         toast.error('Google sign-in failed. Try again.');
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   };
 
   /* Visitor email login */
