@@ -6,7 +6,7 @@
 import {
   collection, addDoc, updateDoc, doc, query, orderBy,
   onSnapshot, serverTimestamp, where, getDocs, getDoc,
-  setDoc, limit, Timestamp,
+  setDoc, Timestamp,
 } from 'firebase/firestore';
 import { db } from './config';
 

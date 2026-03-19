@@ -12,7 +12,7 @@ import { logoutUser } from '../../firebase/auth';
 import { logVisit } from '../../firebase/firestore';
 import {
   PURPOSES, PURPOSE_ICONS, COLLEGES,
-  formatTime, getCoursesForCollege, YEAR_LEVELS,
+  getCoursesForCollege, YEAR_LEVELS,
 } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 import {
