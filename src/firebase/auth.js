@@ -74,42 +74,45 @@ export const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
+  // Force account picker so users can switch Google accounts easily
+  provider.setCustomParameters({ prompt: 'select_account' });
 
   let result = null;
 
   try {
-    // Try popup first (better UX — no page navigation)
     result = await signInWithPopup(auth, provider);
   } catch (popupErr) {
-    // These error codes mean the browser blocked the popup or storage
-    // Edge "Tracking Prevention" and Safari ITP both cause these
-    const redirectCodes = [
-      'auth/popup-blocked',
-      'auth/popup-closed-by-user', // some browsers close popup instantly
-      'auth/cancelled-popup-request',
-      'auth/web-storage-unsupported',
-      'auth/operation-not-supported-in-this-environment',
-    ];
+    console.warn('Google popup error:', popupErr?.code, popupErr?.message);
 
-    // Also catch the tracking prevention storage error which shows up as
-    // a generic error but with a specific message
-    const isStorageBlock =
-      popupErr?.message?.toLowerCase().includes('storage') ||
-      popupErr?.message?.toLowerCase().includes('tracking') ||
-      popupErr?.code === 'auth/internal-error';
-
-    if (redirectCodes.includes(popupErr?.code) || isStorageBlock) {
-      // Fall back to redirect — avoids all third-party cookie issues
-      await signInWithRedirect(auth, provider);
-      return null; // page will redirect; result handled by checkRedirectResult
-    }
-
-    // Any other error (wrong domain handled after): re-throw
+    // User deliberately closed the popup — not an error, return null silently
     if (popupErr?.code === 'auth/popup-closed-by-user' ||
         popupErr?.code === 'auth/cancelled-popup-request') {
-      return null; // user closed popup — not an error
+      return null;
     }
 
+    // ── ROOT CAUSE FIX: localhost / domain not in Firebase Authorized Domains ──
+    // Fix: Firebase Console → Authentication → Settings → Authorized domains
+    // Add: localhost  AND  your-vercel-app.vercel.app
+    if (popupErr?.code === 'auth/unauthorized-domain') {
+      throw new Error('UNAUTHORIZED_DOMAIN');
+    }
+
+    // Browser blocked the popup or storage (Edge Tracking Prevention, Safari ITP)
+    const shouldRedirect =
+      popupErr?.code === 'auth/popup-blocked' ||
+      popupErr?.code === 'auth/web-storage-unsupported' ||
+      popupErr?.code === 'auth/operation-not-supported-in-this-environment' ||
+      popupErr?.code === 'auth/internal-error' ||
+      popupErr?.message?.toLowerCase().includes('storage') ||
+      popupErr?.message?.toLowerCase().includes('tracking') ||
+      popupErr?.message?.toLowerCase().includes('cross-origin');
+
+    if (shouldRedirect) {
+      await signInWithRedirect(auth, provider);
+      return null; // page navigates away; result handled by checkRedirectResult on return
+    }
+
+    // All other errors (network, misconfiguration, etc.) — re-throw for caller to handle
     throw popupErr;
   }
 

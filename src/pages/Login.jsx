@@ -146,27 +146,42 @@ export default function Login() {
   const handleGoogle = async () => {
     setLoading(true);
     try {
-      const { user: u, isNew } = await signInWithGoogle();
+      const result = await signInWithGoogle();
+
+      // result is null when signInWithRedirect was triggered (browser tracking prevention).
+      // The page will navigate away — nothing more to do here.
+      if (result === null) return;
+
+      const { user: u, isNew } = result;
+
       if (isNew) {
-        // Ask new users whether they are faculty or student
         setNewUserData({ user: u });
         setView('visitor-setup');
         setLoading(false);
       } else {
         toast.success('Welcome back to NEU Library! 👋');
-        // useEffect redirects when role loads
+        // useEffect redirects when role resolves
       }
     } catch (err) {
-      if (err.message === 'WRONG_DOMAIN')
+      // Silent: user closed the popup themselves
+      if (err?.code === 'auth/popup-closed-by-user' ||
+          err?.code === 'auth/cancelled-popup-request') {
+        setLoading(false);
+        return;
+      }
+      if (err?.message === 'WRONG_DOMAIN')
         toast.error('Only @neu.edu.ph email accounts are allowed.');
-      else if (err.message === 'BLOCKED')
+      else if (err?.message === 'BLOCKED')
         toast.error('Your account has been blocked. Contact the library admin.');
-      else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')
-        { /* user closed popup — no toast */ }
-      else if (err.code === 'auth/popup-blocked')
-        toast.error('Pop-up was blocked. Please allow pop-ups for this site.');
-      else
+      else if (err?.message === 'UNAUTHORIZED_DOMAIN')
+        toast.error('Google sign-in is not authorized for this domain. Please contact the administrator.');
+      else if (err?.code === 'auth/popup-blocked')
+        toast.error('Pop-up was blocked. Please allow pop-ups for this site and try again.');
+      else {
+        // Log the real error to console so it can be diagnosed
+        console.error('Google sign-in error:', err?.code, err?.message);
         toast.error('Google sign-in failed. Please try again.');
+      }
       setLoading(false);
     }
   };

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, browserSessionPersistence, setPersistence } from 'firebase/auth';
+import { getAuth, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -15,7 +15,10 @@ const app  = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db   = getFirestore(app);
 
-// Use SESSION persistence so the user must log in again after closing the tab
-setPersistence(auth, browserSessionPersistence).catch(() => {});
+// LOCAL persistence is required for Google OAuth popup/redirect flows.
+// browserSessionPersistence breaks the popup's internal iframe handshake
+// because Firebase Auth needs localStorage to coordinate the OAuth result.
+// Sessions are effectively managed by explicit logout (logoutUser clears everything).
+setPersistence(auth, browserLocalPersistence).catch(() => {});
 
 export default app;
