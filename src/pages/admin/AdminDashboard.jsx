@@ -33,7 +33,6 @@ function StatCard({ label, value, icon: Icon, color, delay, sub }) {
 }
 
 export default function AdminDashboard() {
-  const [stats,      setStats]      = useState(null);
   const [allLogs,    setAllLogs]    = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -45,7 +44,6 @@ export default function AdminDashboard() {
   const loadStats = async () => {
     try {
       const s = await fetchDashboardStats();
-      setStats(s);
       setAllLogs(s.allLogs || []);
     } finally { setRefreshing(false); }
   };
