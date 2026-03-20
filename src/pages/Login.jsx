@@ -12,7 +12,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  signInWithGoogle, loginUser, registerAdmin, registerVisitor,
+  signInWithGoogle, loginUser, loginVisitor, registerAdmin, registerVisitor,
   resetPassword, updateVisitorProfile,
 } from '../firebase/auth';
 import { useAuth } from '../hooks/useAuth';
@@ -130,9 +130,9 @@ export default function Login() {
   const [fe,  setFe]  = useState('');
 
   /* ── Visitor form state ── */
-  const [vlf, setVlf] = useState({ email: '', password: '' });
+  const [vlf, setVlf] = useState({ email: '' });
   const [vle, setVle] = useState({});
-  const [vrf, setVrf] = useState({ name: '', email: '', password: '', confirm: '' });
+  const [vrf, setVrf] = useState({ name: '', email: '' });
   const [vre, setVre] = useState({});
 
   const go = (v) => {
@@ -148,9 +148,12 @@ export default function Login() {
     try {
       const result = await signInWithGoogle();
 
-      // result is null when signInWithRedirect was triggered (browser tracking prevention).
-      // The page will navigate away — nothing more to do here.
-      if (result === null) return;
+      // result is null when: user closed popup, or signInWithRedirect was triggered.
+      // In both cases stop the loading spinner immediately.
+      if (result === null) {
+        setLoading(false);
+        return;
+      }
 
       const { user: u, isNew } = result;
 
@@ -173,8 +176,10 @@ export default function Login() {
         toast.error('Only @neu.edu.ph email accounts are allowed.');
       else if (err?.message === 'BLOCKED')
         toast.error('Your account has been blocked. Contact the library admin.');
+      else if (err?.message === 'PROVIDER_DISABLED')
+        toast.error('Google Sign-In is not enabled. Please contact your administrator to enable it in Firebase Console.');
       else if (err?.message === 'UNAUTHORIZED_DOMAIN')
-        toast.error('Google sign-in is not authorized for this domain. Please contact the administrator.');
+        toast.error('This domain is not authorized for Google Sign-In. Please contact your administrator.');
       else if (err?.code === 'auth/popup-blocked')
         toast.error('Pop-up was blocked. Please allow pop-ups for this site and try again.');
       else {
@@ -186,22 +191,21 @@ export default function Login() {
     }
   };
 
-  /* ── Visitor email/password login ── */
+  /* ── Visitor email-only login ── */
   const handleVisitorLogin = async (e) => {
     e.preventDefault();
     const errs = {};
-    if (!vlf.email)    errs.email    = 'Email is required.';
+    if (!vlf.email) errs.email = 'Email is required.';
     else if (!vlf.email.endsWith('@neu.edu.ph')) errs.email = 'Must be a @neu.edu.ph address.';
-    if (!vlf.password) errs.password = 'Password is required.';
     if (Object.keys(errs).length) return setVle(errs);
     setVle({}); setLoading(true);
     try {
-      await loginUser(vlf.email, vlf.password);
+      await loginVisitor(vlf.email); // password handled invisibly in auth.js
       // useEffect redirects based on role
     } catch (err) {
       const c = err.code;
       if (c === 'auth/user-not-found' || c === 'auth/wrong-password' || c === 'auth/invalid-credential')
-        setVle({ password: 'Incorrect email or password.' });
+        setVle({ email: 'Email not found. Please create an account first.' });
       else if (c === 'auth/too-many-requests')
         toast.error('Too many attempts. Try again later.');
       else toast.error('Sign in failed. Try again.');
@@ -209,28 +213,22 @@ export default function Login() {
     }
   };
 
-  /* ── Visitor register ── */
+  /* ── Visitor register (email + name only) ── */
   const handleVisitorRegister = async (e) => {
     e.preventDefault();
     const errs = {};
-    if (!vrf.name.trim())  errs.name     = 'Full name is required.';
-    if (!vrf.email)        errs.email    = 'Email is required.';
+    if (!vrf.name.trim()) errs.name  = 'Full name is required.';
+    if (!vrf.email)       errs.email = 'Email is required.';
     else if (!vrf.email.endsWith('@neu.edu.ph')) errs.email = 'Must be a @neu.edu.ph address.';
-    if (!vrf.password)     errs.password = 'Password is required.';
-    else if (vrf.password.length < 6) errs.password = 'At least 6 characters.';
-    if (vrf.confirm !== vrf.password) errs.confirm  = 'Passwords do not match.';
     if (Object.keys(errs).length) return setVre(errs);
     setVre({}); setLoading(true);
     try {
-      await registerVisitor(vrf.email, vrf.password, vrf.name.trim());
-      toast.success('Account created! Signing you in… 🎉');
-      // useEffect redirects
+      await registerVisitor(vrf.email, vrf.name.trim());
+      toast.success('Account created! You can now sign in. 🎉');
     } catch (err) {
       const c = err.code;
       if (c === 'auth/email-already-in-use')
         setVre({ email: 'Email already registered. Try signing in instead.' });
-      else if (c === 'auth/weak-password')
-        setVre({ password: 'Password is too weak. Use at least 6 characters.' });
       else toast.error('Registration failed. Try again.');
       setLoading(false);
     }
@@ -415,7 +413,7 @@ export default function Login() {
 
               <div className="auth__divider">or sign in with email</div>
 
-              {/* Email / Password */}
+              {/* Email only */}
               <form onSubmit={handleVisitorLogin} noValidate>
                 <Field label="Email address (@neu.edu.ph)" icon={Mail} error={vle.email}>
                   <input type="email" className="lf__input"
@@ -424,10 +422,6 @@ export default function Login() {
                     onChange={e => setVlf(f => ({...f, email: e.target.value}))}
                     autoComplete="email"/>
                 </Field>
-                <PwField label="Password"
-                  value={vlf.password}
-                  onChange={e => setVlf(f => ({...f, password: e.target.value}))}
-                  error={vle.password} autoComplete="current-password"/>
                 <button type="submit" className="btn btn--primary btn--full" disabled={loading}>
                   {loading ? <><span className="btn-spin"/>Signing in…</> : 'Sign In'}
                 </button>
@@ -470,15 +464,6 @@ export default function Login() {
                     onChange={e => setVrf(f => ({...f, email: e.target.value}))}
                     autoComplete="email"/>
                 </Field>
-                <PwField label="Password"
-                  value={vrf.password}
-                  onChange={e => setVrf(f => ({...f, password: e.target.value}))}
-                  error={vre.password} autoComplete="new-password"/>
-                <PwField label="Confirm password"
-                  value={vrf.confirm}
-                  onChange={e => setVrf(f => ({...f, confirm: e.target.value}))}
-                  placeholder="Re-enter password"
-                  error={vre.confirm} autoComplete="new-password"/>
                 <button type="submit" className="btn btn--primary btn--full" disabled={loading}>
                   {loading ? <><span className="btn-spin"/>Creating…</> : 'Create Account'}
                 </button>

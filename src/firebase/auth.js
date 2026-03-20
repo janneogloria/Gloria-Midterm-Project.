@@ -90,9 +90,14 @@ export const signInWithGoogle = async () => {
       return null;
     }
 
-    // ── ROOT CAUSE FIX: localhost / domain not in Firebase Authorized Domains ──
-    // Fix: Firebase Console → Authentication → Settings → Authorized domains
-    // Add: localhost  AND  your-vercel-app.vercel.app
+    // ── ROOT CAUSE: Google Sign-In provider DISABLED in Firebase Console ──
+    // Fix: Firebase Console → Authentication → Sign-in method → Google → Enable
+    if (popupErr?.code === 'auth/operation-not-allowed') {
+      throw new Error('PROVIDER_DISABLED');
+    }
+
+    // ── localhost not in Firebase Authorized Domains ──
+    // Fix: Firebase Console → Authentication → Settings → Authorized domains → Add localhost
     if (popupErr?.code === 'auth/unauthorized-domain') {
       throw new Error('UNAUTHORIZED_DOMAIN');
     }
@@ -149,7 +154,16 @@ export const checkRedirectResult = async () => {
   }
 };
 
-/* ── Email/Password login (visitors AND admins) ─────────────────────────── */
+/* ── Hidden system password (visitors never see this) ───────────────────── */
+const systemPw = (email) => `LG-${email.split('@')[0]}-neu2024!`;
+
+/* ── Visitor login — email only, password handled invisibly ─────────────── */
+export const loginVisitor = async (email) => {
+  const { user } = await signInWithEmailAndPassword(auth, email, systemPw(email));
+  return user;
+};
+
+/* ── Admin login — always uses the real password typed by the user ───────── */
 export const loginUser = async (email, password) => {
   const { user } = await signInWithEmailAndPassword(auth, email, password);
 
@@ -169,14 +183,16 @@ export const loginUser = async (email, password) => {
   return user;
 };
 
-/* ── Visitor: register email/password ───────────────────────────────────── */
-export const registerVisitor = async (email, password, displayName) => {
+/* ── Visitor: register with email + name only (no password shown to user) ── */
+export const registerVisitor = async (email, displayName) => {
+  const password = systemPw(email); // hidden system password, user never sees it
   let firebaseUser;
   try {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     firebaseUser = user;
   } catch (err) {
     if (err.code === 'auth/email-already-in-use') {
+      // Already registered — sign them in directly
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       firebaseUser = user;
       const snap = await getDoc(doc(db, 'users', firebaseUser.uid));

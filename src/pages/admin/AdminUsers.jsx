@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { Search, Users, Ban, CheckCircle, Edit2, X, Save, Filter } from 'lucide-react';
 import './AdminUsers.css';
 
-const VISITOR_TYPES = ['All', 'Student', 'Faculty / Staff', 'Visitor'];
+const VISITOR_TYPES = ['All', 'Student', 'Faculty / Staff'];
 
 function EditModal({ user, onClose, onSave }) {
   const [college,  setCollege]  = useState(user.college   || '');
@@ -86,7 +86,7 @@ export default function AdminUsers() {
       )) return false;
       if (filterCollege && u.college !== filterCollege) return false;
       if (filterType !== 'All') {
-        const t = u.visitorType || u.yearLevel === 'Faculty / Staff' ? 'Faculty / Staff' : 'Student';
+        const t = u.visitorType || (u.yearLevel === 'Faculty / Staff' ? 'Faculty / Staff' : 'Student');
         if (t !== filterType) return false;
       }
       return true;
@@ -185,7 +185,6 @@ export default function AdminUsers() {
                 <th>Type</th>
                 <th>College</th>
                 <th>Joined</th>
-                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -214,11 +213,6 @@ export default function AdminUsers() {
                     </td>
                     <td><span className="au__college">{u.college || '—'}</span></td>
                     <td><span className="au__date">{formatDate(u.createdAt)}</span></td>
-                    <td>
-                      <span className={`badge ${u.blocked?'badge--red':'badge--green'}`}>
-                        {u.blocked ? '⛔ Blocked' : '✓ Active'}
-                      </span>
-                    </td>
                     <td>
                       <div className="au__actions">
                         <button className="au__action-btn au__action-btn--edit"

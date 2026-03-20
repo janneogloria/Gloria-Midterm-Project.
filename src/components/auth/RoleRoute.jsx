@@ -34,12 +34,21 @@ export default function RoleRoute({ children, requiredRole }) {
   // Not logged in
   if (!user) return <Navigate to="/login" replace />;
 
-  // Wrong role — redirect to their correct home
-  if (role !== requiredRole) {
-    if (role === 'admin')   return <Navigate to="/admin/dashboard" replace />;
-    if (role === 'visitor') return <Navigate to="/visitor/home"    replace />;
-    return <Navigate to="/login" replace />;
+  // Admins can access everything — dashboard AND kiosk
+  if (role === 'admin') {
+    // If they're trying to access an admin route, let them through
+    if (requiredRole === 'admin') return children;
+    // If they're trying to access the visitor/kiosk route, allow it too
+    if (requiredRole === 'visitor') return children;
   }
 
-  return children;
+  // Visitors can only access visitor/kiosk routes
+  if (role === 'visitor') {
+    if (requiredRole === 'visitor') return children;
+    // Visitors trying to access admin routes → redirect to kiosk
+    return <Navigate to="/visitor/home" replace />;
+  }
+
+  // Unknown role — back to login
+  return <Navigate to="/login" replace />;
 }

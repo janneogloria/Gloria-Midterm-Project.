@@ -10,7 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import {
   LayoutDashboard, ClipboardList, Users,
-  BarChart2, Settings, LogOut, ChevronLeft, Menu, X,
+  BarChart2, Settings, LogOut, ChevronLeft, Menu, X, Monitor,
 } from 'lucide-react';
 import { exitAndNavigate } from '../../utils/transitions';
 import './Sidebar.css';
@@ -96,16 +96,29 @@ export default function Sidebar({ children }) {
 
         {/* Footer */}
         <div className="sl-foot">
-          <div className="sl-user">
-            <div className="sl-user-avatar" title={name}>{initials}</div>
-            <div className="sl-user-info">
-              <div className="sl-user-name">{name}</div>
-              <div className="sl-user-role">Administrator</div>
-            </div>
-          </div>
-          <button className="sl-logout" onClick={handleLogout} title="Sign out">
-            <LogOut size={15}/>
+          {/* Kiosk Mode button — admins can switch to kiosk view */}
+          <button
+            className="sl-kiosk-btn"
+            onClick={() => { setMobileOpen(false); navigate('/kiosk'); }}
+            title="Switch to Kiosk Mode"
+          >
+            <Monitor size={15} className="sl-kiosk-icon"/>
+            <span className="sl-kiosk-label">Kiosk Mode</span>
           </button>
+
+          {/* User info + logout */}
+          <div className="sl-foot-user-row">
+            <div className="sl-user">
+              <div className="sl-user-avatar" title={name}>{initials}</div>
+              <div className="sl-user-info">
+                <div className="sl-user-name">{name}</div>
+                <div className="sl-user-role">Administrator</div>
+              </div>
+            </div>
+            <button className="sl-logout" onClick={handleLogout} title="Sign out">
+              <LogOut size={15}/>
+            </button>
+          </div>
         </div>
       </aside>
 

@@ -148,13 +148,18 @@ body:has(.sl-collapsed.sl-layout) {
   display: none;
 }
 
-/* Footer — stack avatar above logout button */
+/* Footer — stack vertically when collapsed */
 .sl-collapsed .sl-foot {
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  padding: 12px 0 14px;
-  gap: 10px;
+  padding: 10px 0 12px;
+  gap: 8px;
+}
+
+.sl-collapsed .sl-foot-user-row {
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  align-items: center;
 }
 
 .sl-collapsed .sl-user {
@@ -264,11 +269,19 @@ body:has(.sl-collapsed.sl-layout) {
 /* ── Footer — always visible, never pushed off ── */
 .sl-foot {
   flex-shrink: 0;
-  padding: 12px 10px;
-  min-height: 58px;
+  padding: 10px 10px 12px;
   border-top: 1px solid rgba(255,255,255,.1);
   background: rgba(0,0,0,.18);
-  display: flex; align-items: center; gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── User + logout row ── */
+.sl-foot-user-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .sl-user { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
@@ -388,4 +401,53 @@ body:has(.sl-collapsed.sl-layout) {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ── Kiosk Mode button ── */
+.sl-kiosk-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 200ms, color 200ms, border-color 200ms;
+}
+
+.sl-kiosk-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.sl-kiosk-icon { flex-shrink: 0; }
+
+.sl-kiosk-label {
+  transition: opacity 250ms ease, width 450ms cubic-bezier(.22, 1, .36, 1);
+  white-space: nowrap;
+}
+
+/* Collapsed: icon only, centered */
+.sl-collapsed .sl-kiosk-label {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sl-collapsed .sl-kiosk-btn {
+  justify-content: center;
+  padding: 8px 0;
+  width: 38px;
+  margin: 0 auto;
+  border-radius: 9px;
 }

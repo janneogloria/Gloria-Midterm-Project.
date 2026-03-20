@@ -17,7 +17,7 @@ import {
 import toast from 'react-hot-toast';
 import {
   BookOpen, LogOut, CheckCircle, RotateCcw,
-  ChevronDown, CalendarDays, Building2, GraduationCap,
+  ChevronDown, CalendarDays, Building2, GraduationCap, LayoutDashboard,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LibraryCarousel from '../../components/ui/LibraryCarousel';
@@ -38,8 +38,9 @@ function avatarColor(name = '') {
   return c[Math.abs(h) % c.length];
 }
 
-// Detect visitor type from email or year level
-function getVisitorType(profile) {
+// Detect visitor type from role, email or year level
+function getVisitorType(profile, role) {
+  if (role === 'admin') return 'Faculty / Staff';
   if (!profile) return 'Visitor';
   if (profile.yearLevel === 'Faculty / Staff') return 'Faculty / Staff';
   if (profile.studentNumber) return 'Student';
@@ -47,7 +48,7 @@ function getVisitorType(profile) {
 }
 
 export default function VisitorHome() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, role } = useAuth();
   const navigate = useNavigate();
 
   const [submitting, setSubmitting] = useState(false);
@@ -61,7 +62,7 @@ export default function VisitorHome() {
   const name     = profile?.name || user?.displayName || 'Visitor';
   const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
   const bg       = avatarColor(name);
-  const visitorType = getVisitorType(profile);
+  const visitorType = getVisitorType(profile, role);
 
   // Pre-fill college/course from profile if available
   useEffect(() => {
@@ -128,6 +129,17 @@ export default function VisitorHome() {
           <span className="vh__header-title">LibraGate NEU</span>
         </div>
         <div className="vh__header-right">
+          {/* Admin gets a back-to-dashboard button */}
+          {role === 'admin' && (
+            <button
+              className="vh__header-dashboard-btn"
+              onClick={() => navigate('/admin/dashboard')}
+              title="Back to Dashboard"
+            >
+              <LayoutDashboard size={14}/>
+              <span>Dashboard</span>
+            </button>
+          )}
           <div className="vh__header-avatar" style={{ background: bg }}>
             {user?.photoURL
               ? <img src={user.photoURL} alt={name} referrerPolicy="no-referrer"/>

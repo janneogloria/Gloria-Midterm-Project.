@@ -7,7 +7,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { fetchDashboardStats } from '../../firebase/firestore';
 import { COLLEGE_COLORS, PURPOSES, PURPOSE_ICONS } from '../../utils/helpers';
 import {
-  Users, CalendarDays, CalendarRange, BarChart2,
+  CalendarDays, CalendarRange, BarChart2,
   TrendingUp, RefreshCw, SlidersHorizontal, X,
 } from 'lucide-react';
 import './AdminDashboard.css';
@@ -187,10 +187,9 @@ export default function AdminDashboard() {
 
       {/* ── Stat cards ── */}
       <div className="adc__stats">
-        <StatCard label="Active Now"  value={filteredStats.active} icon={Users}        color="#16a34a" delay={1} sub={hasFilter ? 'filtered' : 'real-time'} />
-        <StatCard label="Today"       value={filteredStats.today}  icon={CalendarDays}  color="#2d3a8c" delay={2} />
-        <StatCard label="This Week"   value={filteredStats.week}   icon={CalendarRange} color="#0284c7" delay={3} />
-        <StatCard label="This Month"  value={filteredStats.month}  icon={BarChart2}     color="#e8a020" delay={4} />
+        <StatCard label="Today"       value={filteredStats.today}  icon={CalendarDays}  color="#2d3a8c" delay={1} />
+        <StatCard label="This Week"   value={filteredStats.week}   icon={CalendarRange} color="#0284c7" delay={2} />
+        <StatCard label="This Month"  value={filteredStats.month}  icon={BarChart2}     color="#e8a020" delay={3} />
       </div>
 
       {/* ── Breakdown panels ── */}

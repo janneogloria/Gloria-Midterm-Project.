@@ -52,6 +52,12 @@ function AnimatedRoutes() {
           <RoleRoute requiredRole="visitor"><VisitorHome /></RoleRoute>
         </PageTransition>
       }/>
+      {/* Admins can also access kiosk via /kiosk */}
+      <Route path="/kiosk" element={
+        <PageTransition key="kiosk">
+          <RoleRoute requiredRole="visitor"><VisitorHome /></RoleRoute>
+        </PageTransition>
+      }/>
 
       {/* Admin — NO PageTransition, Sidebar handles its own animation */}
       <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
