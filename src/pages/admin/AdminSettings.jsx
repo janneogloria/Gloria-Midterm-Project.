@@ -1,16 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { registerAdmin } from '../../firebase/auth';
 import { useAuth } from '../../hooks/useAuth';
+import { subscribeToProfileChangeRequests, approveProfileChange, denyProfileChange } from '../../firebase/firestore';
 import toast from 'react-hot-toast';
-import { Settings, UserPlus, Mail, Lock, User, Shield } from 'lucide-react';
+import { Settings, UserPlus, Mail, Lock, User, Shield, CheckCircle, X, Bell } from 'lucide-react';
 import QRModal from '../../components/ui/QRModal';
 import './AdminSettings.css';
 
 export default function AdminSettings() {
   const { user, profile } = useAuth();
-  const [form,    setForm]    = useState({ name: '', email: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [showQR,  setShowQR]  = useState(false);
+  const [form,       setForm]       = useState({ name: '', email: '', password: '' });
+  const [loading,    setLoading]    = useState(false);
+  const [showQR,     setShowQR]     = useState(false);
+  const [changeReqs, setChangeReqs] = useState([]);
+  const [processing, setProcessing] = useState(null);
+
+  useEffect(() => {
+    const unsub = subscribeToProfileChangeRequests(setChangeReqs);
+    return unsub;
+  }, []);
+
+  const pendingReqs = changeReqs.filter(r => r.status === 'pending');
+
+  const handleApprove = async (req) => {
+    setProcessing(req.id);
+    try {
+      await approveProfileChange(req.id, req.uid, { newCollege: req.newCollege, newCourse: req.newCourse, newRole: req.newRole });
+      toast.success(`Profile updated for ${req.name}.`);
+    } catch { toast.error('Failed to approve.'); }
+    finally { setProcessing(null); }
+  };
+
+  const handleDeny = async (req) => {
+    setProcessing(req.id);
+    try {
+      await denyProfileChange(req.id);
+      toast.success(`Request from ${req.name} denied.`);
+    } catch { toast.error('Failed to deny.'); }
+    finally { setProcessing(null); }
+  };
 
   const handle = async (e) => {
     e.preventDefault();
@@ -130,6 +158,64 @@ export default function AdminSettings() {
         </div>
 
       </div>
+
+      {/* ── Profile Change Requests ── */}
+      {changeReqs.length > 0 && (
+        <div className="as__section as__section--full anim-fade-up delay-3" style={{marginTop: 24}}>
+          <div className="as__section-head">
+            <Bell size={16}/>
+            Profile Change Requests
+            {pendingReqs.length > 0 && (
+              <span className="as__req-badge">{pendingReqs.length} pending</span>
+            )}
+          </div>
+
+          {changeReqs.map(req => (
+            <div key={req.id} className={`as__req-card as__req-card--${req.status}`}>
+              <div className="as__req-top">
+                <div>
+                  <div className="as__req-name">{req.name}</div>
+                  <div className="as__req-email">{req.email}</div>
+                </div>
+                <span className={`as__req-status as__req-status--${req.status}`}>
+                  {req.status === 'pending' ? '⏳ Pending' : req.status === 'approved' ? '✅ Approved' : '❌ Denied'}
+                </span>
+              </div>
+
+              <div className="as__req-changes">
+                <div className="as__req-col">
+                  <div className="as__req-col-label">Current</div>
+                  <div>{req.currentCollege || '—'}</div>
+                  <div>{req.currentCourse  || '—'}</div>
+                  <div>{req.currentRole    || '—'}</div>
+                </div>
+                <div className="as__req-arrow">→</div>
+                <div className="as__req-col as__req-col--new">
+                  <div className="as__req-col-label">Requested</div>
+                  <div>{req.newCollege}</div>
+                  <div>{req.newCourse  || '—'}</div>
+                  <div>{req.newRole}</div>
+                </div>
+              </div>
+
+              {req.reason && (
+                <div className="as__req-reason">💬 "{req.reason}"</div>
+              )}
+
+              {req.status === 'pending' && (
+                <div className="as__req-actions">
+                  <button className="as__req-btn as__req-btn--deny" onClick={() => handleDeny(req)} disabled={processing === req.id}>
+                    <X size={13}/> Deny
+                  </button>
+                  <button className="as__req-btn as__req-btn--approve" onClick={() => handleApprove(req)} disabled={processing === req.id}>
+                    {processing === req.id ? 'Processing…' : <><CheckCircle size={13}/> Approve</>}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Admin QR Modal */}
       <QRModal

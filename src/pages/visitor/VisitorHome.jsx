@@ -9,15 +9,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { logoutUser } from '../../firebase/auth';
-import { logVisit } from '../../firebase/firestore';
+import { logVisit, saveUserProfile, getUser, requestProfileChange } from '../../firebase/firestore';
 import {
   PURPOSES, PURPOSE_ICONS, COLLEGES,
-  getCoursesForCollege, YEAR_LEVELS,
+  getCoursesForCollege,
 } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 import {
   BookOpen, LogOut, CheckCircle, RotateCcw,
-  ChevronDown, CalendarDays, Building2, GraduationCap, LayoutDashboard,
+  ChevronDown, CalendarDays, Building2, GraduationCap, LayoutDashboard, Send,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LibraryCarousel from '../../components/ui/LibraryCarousel';
@@ -51,42 +51,80 @@ export default function VisitorHome() {
   const { user, profile, loading: authLoading, role } = useAuth();
   const navigate = useNavigate();
 
-  const [submitting, setSubmitting] = useState(false);
-  const [purpose,    setPurpose]    = useState('');
-  const [college,    setCollege]    = useState('');
-  const [course,     setCourse]     = useState('');
-  const [yearLevel,  setYearLevel]  = useState('');
-  const [done,       setDone]       = useState(false);
-  const [logTime,    setLogTime]    = useState(null);
+  const [submitting,     setSubmitting]     = useState(false);
+  const [purpose,        setPurpose]        = useState('');
+  const [college,        setCollege]        = useState('');
+  const [course,         setCourse]         = useState('');
+  const [visitorRole,    setVisitorRole]    = useState('');
+  const [done,           setDone]           = useState(false);
+  const [logTime,        setLogTime]        = useState(null);
+
+  // Direct Firestore read ensures lock is current even if auth context hasn't refreshed
+  const [profileLocked,  setProfileLocked]  = useState(false);
+  const [lockedData,     setLockedData]     = useState(null);
+
+  // Change request modal state
+  const [showChangeReq,  setShowChangeReq]  = useState(false);
+  const [reqCollege,     setReqCollege]     = useState('');
+  const [reqCourse,      setReqCourse]      = useState('');
+  const [reqRole,        setReqRole]        = useState('');
+  const [reqReason,      setReqReason]      = useState('');
+  const [sendingReq,     setSendingReq]     = useState(false);
 
   const name     = profile?.name || user?.displayName || 'Visitor';
   const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
   const bg       = avatarColor(name);
   const visitorType = getVisitorType(profile, role);
 
-  // Pre-fill college/course from profile if available
+  // Read profile directly from Firestore to get accurate lock status
   useEffect(() => {
-    if (profile?.college) setCollege(profile.college);
-    if (profile?.course)  setCourse(profile.course);
-    if (profile?.yearLevel) setYearLevel(profile.yearLevel);
-  }, [profile]);
+    if (!user?.uid || role === 'admin') return;
+    getUser(user.uid).then(data => {
+      if (!data) return;
+      if (data.profileLocked && data.college && data.visitorRole) {
+        setProfileLocked(true);
+        setLockedData({ college: data.college, course: data.course || '', visitorRole: data.visitorRole });
+        setCollege(data.college);
+        setCourse(data.course || '');
+        setVisitorRole(data.visitorRole);
+        // Pre-fill change request fields
+        setReqCollege(data.college);
+        setReqCourse(data.course || '');
+        setReqRole(data.visitorRole);
+      } else {
+        // Not locked yet — pre-fill if values exist
+        if (data.college)     setCollege(data.college);
+        if (data.course)      setCourse(data.course);
+        if (data.visitorRole) setVisitorRole(data.visitorRole);
+        else if (data.yearLevel) setVisitorRole(data.yearLevel);
+      }
+    });
+  }, [user?.uid, role]);
 
   const handleLog = async () => {
-    if (!purpose) return toast.error('Please select your purpose of visit.');
-    if (!college) return toast.error('Please select your college.');
+    if (!purpose)     return toast.error('Please select your purpose of visit.');
+    if (!college)     return toast.error('Please select your college.');
+    if (!visitorRole) return toast.error('Please select your role.');
     setSubmitting(true);
     try {
       const now = new Date();
+
+      // Save college, course, role to profile permanently on first log
+      if (!profileLocked && user?.uid) {
+        await saveUserProfile(user.uid, { college, course, visitorRole });
+      }
+
       await logVisit({
-        uid:       user.uid,
+        uid:         user.uid,
         name,
-        email:     user.email,
+        email:       user.email,
         college,
-        course:    course || profile?.course || '',
-        yearLevel: yearLevel || profile?.yearLevel || '',
+        course:      course || profile?.course || '',
+        yearLevel:   visitorRole, // keep yearLevel field in logs for compatibility
+        visitorRole,
         purpose,
-        photoURL:  user.photoURL || '',
-        visitorType,
+        photoURL:    user.photoURL || '',
+        visitorType: visitorRole === 'Faculty / Staff' ? 'Faculty / Staff' : 'Student',
       });
       setLogTime(now);
       setDone(true);
@@ -102,6 +140,31 @@ export default function VisitorHome() {
     setDone(false);
     setPurpose('');
     setLogTime(null);
+  };
+
+  const handleChangeRequest = async () => {
+    if (!reqCollege || !reqRole) return toast.error('Please fill in all required fields.');
+    setSendingReq(true);
+    try {
+      await requestProfileChange(user.uid, {
+        name,
+        email: user.email,
+        currentCollege: lockedData?.college || '',
+        currentCourse:  lockedData?.course  || '',
+        currentRole:    lockedData?.visitorRole || '',
+        newCollege: reqCollege,
+        newCourse:  reqCourse,
+        newRole:    reqRole,
+        reason:     reqReason,
+      });
+      toast.success('Change request sent to admin! ✅');
+      setShowChangeReq(false);
+      setReqReason('');
+    } catch {
+      toast.error('Failed to send request. Try again.');
+    } finally {
+      setSendingReq(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -211,47 +274,139 @@ export default function VisitorHome() {
                 ))}
               </div>
 
-              {/* College */}
-              <div className="vh__field">
-                <label className="vh__label"><Building2 size={13}/> College / Department</label>
-                <div className="vh__select-wrap">
-                  <select className={`vh__select${!college?' empty':''}`}
-                    value={college} onChange={e => { setCollege(e.target.value); setCourse(''); }}>
-                    <option value="">Select your college…</option>
-                    {COLLEGES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="vh__select-icon"/>
-                </div>
-              </div>
+              {/* ── Profile fields: locked after first save ── */}
+              {profileLocked ? (
+                <>
+                  <div className="vh__profile-locked">
+                    <div className="vh__profile-locked-head">
+                      <span>🔒</span>
+                      <span>Your profile information is saved.</span>
+                    </div>
+                    <div className="vh__profile-locked-rows">
+                      <div className="vh__profile-locked-row">
+                        <span className="vh__profile-locked-label">College</span>
+                        <span className="vh__profile-locked-val">{lockedData?.college}</span>
+                      </div>
+                      {lockedData?.course && (
+                        <div className="vh__profile-locked-row">
+                          <span className="vh__profile-locked-label">Course</span>
+                          <span className="vh__profile-locked-val">{lockedData?.course}</span>
+                        </div>
+                      )}
+                      <div className="vh__profile-locked-row">
+                        <span className="vh__profile-locked-label">Role</span>
+                        <span className="vh__profile-locked-val">
+                          {lockedData?.visitorRole === 'Faculty / Staff' ? '👩‍🏫' : '🎓'} {lockedData?.visitorRole}
+                        </span>
+                      </div>
+                    </div>
+                    <button className="vh__change-req-btn" onClick={() => setShowChangeReq(true)}>
+                      <Send size={12}/> Request a change
+                    </button>
+                  </div>
 
-              {/* Course */}
-              <div className="vh__field">
-                <label className="vh__label"><GraduationCap size={13}/> Course / Program</label>
-                <div className="vh__select-wrap">
-                  <select className={`vh__select${!course?' empty':''}`}
-                    value={course} onChange={e => setCourse(e.target.value)} disabled={!college}>
-                    <option value="">{college ? 'Select course…' : 'Select college first…'}</option>
-                    {getCoursesForCollege(college).map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="vh__select-icon"/>
-                </div>
-              </div>
+                  {/* Change request modal */}
+                  {showChangeReq && (
+                    <div className="vh__modal-overlay" onClick={() => setShowChangeReq(false)}>
+                      <div className="vh__modal" onClick={e => e.stopPropagation()}>
+                        <div className="vh__modal-head">
+                          <span>📝 Request Profile Change</span>
+                          <button onClick={() => setShowChangeReq(false)}>✕</button>
+                        </div>
+                        <p className="vh__modal-sub">Your request will be sent to the library admin for approval.</p>
 
-              {/* Year level */}
-              <div className="vh__field">
-                <label className="vh__label"><GraduationCap size={13}/> Year Level / Role</label>
-                <div className="vh__select-wrap">
-                  <select className={`vh__select${!yearLevel?' empty':''}`}
-                    value={yearLevel} onChange={e => setYearLevel(e.target.value)}>
-                    <option value="">Select year level…</option>
-                    {YEAR_LEVELS.map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="vh__select-icon"/>
-                </div>
-              </div>
+                        <div className="vh__modal-field">
+                          <label>New College / Department</label>
+                          <select value={reqCollege} onChange={e => { setReqCollege(e.target.value); setReqCourse(''); }}>
+                            <option value="">Select college…</option>
+                            {COLLEGES.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div className="vh__modal-field">
+                          <label>New Course / Program</label>
+                          <select value={reqCourse} onChange={e => setReqCourse(e.target.value)} disabled={!reqCollege}>
+                            <option value="">{reqCollege ? 'Select course…' : 'Select college first…'}</option>
+                            {getCoursesForCollege(reqCollege).map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div className="vh__modal-field">
+                          <label>New Role</label>
+                          <select value={reqRole} onChange={e => setReqRole(e.target.value)}>
+                            <option value="">Select role…</option>
+                            <option value="Student">🎓 Student</option>
+                            <option value="Faculty / Staff">👩‍🏫 Faculty / Staff</option>
+                          </select>
+                        </div>
+                        <div className="vh__modal-field">
+                          <label>Reason for change <span style={{color:'#9ca3af'}}>(optional)</span></label>
+                          <textarea
+                            className="vh__modal-textarea"
+                            placeholder="e.g. Wrong course selected, transferred college…"
+                            value={reqReason}
+                            onChange={e => setReqReason(e.target.value)}
+                            rows={3}
+                          />
+                        </div>
+                        <div className="vh__modal-foot">
+                          <button className="vh__modal-cancel" onClick={() => setShowChangeReq(false)}>Cancel</button>
+                          <button className="vh__modal-submit" onClick={handleChangeRequest} disabled={sendingReq || !reqCollege || !reqRole}>
+                            {sendingReq ? 'Sending…' : <><Send size={13}/> Send Request</>}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* College */}
+                  <div className="vh__field">
+                    <label className="vh__label"><Building2 size={13}/> College / Department</label>
+                    <div className="vh__select-wrap">
+                      <select className={`vh__select${!college?' empty':''}`}
+                        value={college} onChange={e => { setCollege(e.target.value); setCourse(''); }}>
+                        <option value="">Select your college…</option>
+                        {COLLEGES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <ChevronDown size={14} className="vh__select-icon"/>
+                    </div>
+                  </div>
+
+                  {/* Course */}
+                  <div className="vh__field">
+                    <label className="vh__label"><GraduationCap size={13}/> Course / Program</label>
+                    <div className="vh__select-wrap">
+                      <select className={`vh__select${!course?' empty':''}`}
+                        value={course} onChange={e => setCourse(e.target.value)} disabled={!college}>
+                        <option value="">{college ? 'Select course…' : 'Select college first…'}</option>
+                        {getCoursesForCollege(college).map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <ChevronDown size={14} className="vh__select-icon"/>
+                    </div>
+                  </div>
+
+                  {/* Role */}
+                  <div className="vh__field">
+                    <label className="vh__label"><GraduationCap size={13}/> Role</label>
+                    <div className="vh__select-wrap">
+                      <select className={`vh__select${!visitorRole?' empty':''}`}
+                        value={visitorRole} onChange={e => setVisitorRole(e.target.value)}>
+                        <option value="">Select your role…</option>
+                        <option value="Student">🎓 Student</option>
+                        <option value="Faculty / Staff">👩‍🏫 Faculty / Staff</option>
+                      </select>
+                      <ChevronDown size={14} className="vh__select-icon"/>
+                    </div>
+                  </div>
+
+                  <div className="vh__profile-save-note">
+                    ℹ️ Your college, course, and role will be saved after your first log and cannot be changed without admin approval.
+                  </div>
+                </>
+              )}
 
               <button className="vh__cta"
-                disabled={!purpose || !college || submitting}
+                disabled={!purpose || !college || !visitorRole || submitting}
                 onClick={handleLog}>
                 {submitting
                   ? <><span className="vh__spinner"/>Logging visit…</>

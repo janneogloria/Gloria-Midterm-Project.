@@ -156,6 +156,51 @@ export const subscribeToUsers = (cb) => {
 export const updateUserProfile = async (uid, data) =>
   updateDoc(doc(db, 'users', uid), { ...data, updatedAt: serverTimestamp() });
 
+/** Save locked profile fields (college, course, visitorRole) — only written once */
+export const saveUserProfile = async (uid, { college, course, visitorRole }) =>
+  updateDoc(doc(db, 'users', uid), {
+    college, course, visitorRole,
+    profileLocked: true,
+    updatedAt: serverTimestamp(),
+  });
+
+/** Submit a profile change request to admins */
+export const requestProfileChange = async (uid, { name, email, currentCollege, currentCourse, currentRole, newCollege, newCourse, newRole, reason }) => {
+  await addDoc(collection(db, 'profile_change_requests'), {
+    uid, name, email,
+    currentCollege, currentCourse, currentRole,
+    newCollege, newCourse, newRole,
+    reason: reason || '',
+    status: 'pending', // 'pending' | 'approved' | 'denied'
+    createdAt: serverTimestamp(),
+  });
+};
+
+/** Real-time: all pending profile change requests (admin use) */
+export const subscribeToProfileChangeRequests = (cb) => {
+  const q = query(collection(db, 'profile_change_requests'), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, snap =>
+    cb(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  );
+};
+
+/** Approve a profile change request — updates user profile and marks request approved */
+export const approveProfileChange = async (requestId, uid, { newCollege, newCourse, newRole }) => {
+  await updateDoc(doc(db, 'users', uid), {
+    college: newCollege, course: newCourse, visitorRole: newRole,
+    profileLocked: true, updatedAt: serverTimestamp(),
+  });
+  await updateDoc(doc(db, 'profile_change_requests', requestId), {
+    status: 'approved', resolvedAt: serverTimestamp(),
+  });
+};
+
+/** Deny a profile change request */
+export const denyProfileChange = async (requestId) =>
+  updateDoc(doc(db, 'profile_change_requests', requestId), {
+    status: 'denied', resolvedAt: serverTimestamp(),
+  });
+
 /** Block or unblock a visitor */
 export const setUserBlocked = async (uid, blocked) =>
   updateDoc(doc(db, 'users', uid), { blocked, updatedAt: serverTimestamp() });

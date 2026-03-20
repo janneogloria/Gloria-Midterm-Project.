@@ -270,3 +270,98 @@
 }
 
 .as__qr-note svg { flex-shrink: 0; margin-top: 1px; }
+/* ── Add these to src/pages/admin/AdminSettings.css ── */
+
+.as__section--full { grid-column: 1 / -1; }
+
+.as__req-badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 99px;
+  font-size: .68rem;
+  font-weight: 700;
+}
+
+.as__req-card {
+  background: #f9fafb;
+  border: 1.5px solid #e4e7f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  transition: border-color 200ms;
+}
+.as__req-card--approved { border-color: #bbf7d0; background: #f0fdf4; }
+.as__req-card--denied   { border-color: #fecaca; background: #fff5f5; opacity: .7; }
+
+.as__req-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.as__req-name  { font-size: .85rem; font-weight: 600; color: #0f1420; }
+.as__req-email { font-size: .72rem; color: #6b7280; margin-top: 2px; }
+
+.as__req-status {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.as__req-status--pending  { background: #fef3c7; color: #d97706; }
+.as__req-status--approved { background: #dcfce7; color: #16a34a; }
+.as__req-status--denied   { background: #fee2e2; color: #dc2626; }
+
+.as__req-changes {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid #e4e7f0;
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-size: .78rem;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.as__req-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.as__req-col--new { color: #2d3a8c; font-weight: 600; }
+.as__req-col-label { font-size: .65rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+.as__req-arrow { font-size: 1.1rem; color: #9ca3af; padding-top: 18px; }
+
+.as__req-reason {
+  font-size: .75rem;
+  color: #6b7280;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.as__req-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.as__req-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: .78rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: opacity 200ms, transform 200ms;
+}
+.as__req-btn:disabled { opacity: .5; cursor: not-allowed; }
+.as__req-btn--deny    { border: 1.5px solid #fecaca; background: #fff; color: #dc2626; }
+.as__req-btn--deny:hover:not(:disabled)    { background: #fee2e2; }
+.as__req-btn--approve { border: none; background: #2d3a8c; color: #fff; }
+.as__req-btn--approve:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
