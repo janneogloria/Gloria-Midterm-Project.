@@ -1,4 +1,4 @@
-gloria-midterm-project.vercel.app
+App link: gloria-midterm-project.vercel.app 
 
 # 📚 LibraGate NEU — Library Visitor Management System
 
