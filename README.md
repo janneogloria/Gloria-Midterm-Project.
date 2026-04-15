@@ -1,3 +1,5 @@
+gloria-midterm-project.vercel.app
+
 # 📚 LibraGate NEU — Library Visitor Management System
 
 > A modern, real-time visitor logging and management system for **New Era University Library**, built with React and Firebase.
